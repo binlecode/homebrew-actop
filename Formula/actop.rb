@@ -3,8 +3,8 @@ class Actop < Formula
 
   desc "Performance monitoring CLI tool for Apple Silicon"
   homepage "https://github.com/binlecode/actop"
-  url "https://github.com/binlecode/actop/archive/refs/tags/v1.0.0.tar.gz"
-  sha256 "4a05f436ee5b7d6f15e2097be443a7ea06407c18cae1a6813ba2d05f71dd004d"
+  url "https://github.com/binlecode/actop/archive/refs/tags/v1.0.2.tar.gz"
+  sha256 "9324dc145a0d8990eb7bd194a9d55e5d9762356b07cafae36b8b114215d1e94d"
   license "MIT"
 
   depends_on "python@3.13"
