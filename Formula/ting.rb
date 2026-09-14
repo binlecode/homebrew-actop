@@ -1,8 +1,8 @@
 class Ting < Formula
   desc "Agent-first media engine with a terminal face: search, play, control mpv"
   homepage "https://github.com/binlecode/ting"
-  url "https://github.com/binlecode/ting/archive/refs/tags/v0.9.0.tar.gz"
-  sha256 "866ef72e93b074daedb032095e0e594f0abc1601189546eb1e02e238408386de"
+  url "https://github.com/binlecode/ting/archive/refs/tags/v0.10.0.tar.gz"
+  sha256 "234a08c8ab295ac35b08da683eb3d43749a3007b933876d29e06eeec20499c13"
   license "MIT"
 
   depends_on "jq"
@@ -15,17 +15,15 @@ class Ting < Formula
   # scripts into bin/ would put them one directory away from both files and break --version
   # and every default in the suite.
   #
-  # The four names in the second list are the suite's pre-rename spelling, and they are
-  # shipped for the same reason the checkout ships them: someone's script says `ut-play`.
-  # Each is a symlink inside `shell/` pointing at its new name, so linking it into bin gives
-  # a two-hop chain that still resolves into libexec/shell — which is what the paragraph
-  # above needs and what the test below proves rather than assumes.
+  # Ten, and only ten. v0.9.0 also linked the pre-rename names (uting, ut-play, ut-playlist,
+  # ut-history); upstream deleted those in v0.10.0, so there is nothing left to link and a
+  # keg from here has one name per command. An installed 0.9.0 keg loses them on upgrade,
+  # which is the breaking half of that release and is upstream's call, not this file's.
   def install
     libexec.install "shell", "config", "VERSION"
     %w[
       ting t-play t-playlist t-history
       yt-search yt-resolve bili-search bili-resolve ne-search ne-resolve
-      uting ut-play ut-playlist ut-history
     ].each { |cmd| bin.install_symlink libexec/"shell/#{cmd}" }
     doc.install "README.md", "docs"
   end
@@ -35,6 +33,10 @@ class Ting < Formula
       Playback needs a netcat that speaks unix sockets for the runtime control verbs
       (--pause, --seek, --set-volume, --set-loop). macOS ships one; on Linux install
       netcat-openbsd or nmap's ncat.
+
+      The pre-rename command names (uting, ut-play, ut-playlist, ut-history) are gone as
+      of 0.10.0. Your own files are not: a config at ~/.config/uting/config and a store
+      at ~/.local/state/uting are still read where they are.
     EOS
   end
 
@@ -43,10 +45,10 @@ class Ting < Formula
     assert_match version.to_s, shell_output("#{bin}/t-play --version")
     # The lifecycle half answers without a network: no player is a real, empty answer.
     assert_match "\"players\":[]", shell_output("#{bin}/t-play --status -j")
-    # The pre-rename names, through the two-hop symlink: a chain that lost its footing
-    # would answer `unknown` here rather than the version, which is the failure the
-    # install comment is about.
-    assert_match version.to_s, shell_output("#{bin}/uting --version")
-    assert_match version.to_s, shell_output("#{bin}/ut-play --version")
+    # Dropping the legacy lookup arms could only have broken one thing: the TUI finding its
+    # own player. WHICH gate answers first depends on what the test machine has on PATH — a
+    # missing unix-socket netcat speaks before the tty gate does — so the claim is the
+    # negative one, which holds under every gate: it never gets as far as not finding t-play.
+    refute_match "cannot locate", shell_output("#{bin}/ting q </dev/null 2>&1 || true")
   end
 end
