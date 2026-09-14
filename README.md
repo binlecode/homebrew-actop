@@ -1,14 +1,23 @@
 # homebrew-actop
 
-Homebrew tap for [`actop`](https://github.com/binlecode/actop) — the sudoless
-Apple-Silicon `*top` (CPU/GPU/ANE/memory/power/thermal).
+Homebrew tap for two of binlecode's terminal tools:
+
+- [`actop`](https://github.com/binlecode/actop) — the sudoless Apple-Silicon
+  `*top` (CPU/GPU/ANE/memory/power/thermal).
+- [`ting`](https://github.com/binlecode/ting) — the agent-first media engine
+  with a terminal face (search, play, control mpv).
 
 ## Install
 
 ```sh
 brew tap binlecode/actop
 brew install actop
+brew install ting
 ```
+
+`ting` was called `uting` up to v0.8.2. `formula_renames.json` carries the
+mapping, so an existing `brew install binlecode/actop/uting` migrates on the
+next `brew update` and the pre-rename command names still ship inside the keg.
 
 `brew tap binlecode/actop` resolves to this repo (`binlecode/homebrew-actop`).
 
