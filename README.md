@@ -15,14 +15,17 @@ brew install actop
 brew install ting
 ```
 
-`ting` was called `uting` up to v0.8.2. `formula_renames.json` carries the
-mapping, so an existing `brew install binlecode/actop/uting` migrates on the
-next `brew update`.
+`ting` was called `uting` up to v0.8.2, and this tap carried a
+`formula_renames.json` mapping the old formula name onto the new one for one
+release so an installed keg would migrate on `brew update`. That migration has
+happened; the mapping is gone, and `brew install binlecode/actop/uting` is now
+simply an unknown formula.
 
 The pre-rename command names (`uting`, `ut-play`, `ut-playlist`, `ut-history`)
 shipped inside the keg for v0.9.0 only; upstream deleted them in v0.10.0, so a
-keg from here now has one name per command. Files are unaffected — a config at
-`~/.config/uting/config` and a store at `~/.local/state/uting` are still read.
+keg from here has one name per command. Files are unaffected either way —
+upstream still reads a config at `~/.config/uting/config` and a store at
+`~/.local/state/uting` when no `ting`-named one exists.
 
 `brew tap binlecode/actop` resolves to this repo (`binlecode/homebrew-actop`).
 
