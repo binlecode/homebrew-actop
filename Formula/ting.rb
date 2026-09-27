@@ -1,7 +1,7 @@
 class Ting < Formula
   desc "Agent-first media engine with a terminal face: search, play, control mpv"
   homepage "https://github.com/binlecode/ting"
-  url "https://github.com/binlecode/ting/archive/refs/tags/v0.14.1.tar.gz"
+  url "https://github.com/binlecode/ting/archive/refs/tags/v0.18.0.tar.gz"
   sha256 "7d2b9a47c8434e7895340f3101b852b3c739bc9363b982439282b1f364debe2c"
   license "MIT"
 
@@ -9,22 +9,19 @@ class Ting < Formula
   depends_on "mpv"
   depends_on "yt-dlp"
 
-  # Ten independent executables that share no library. They locate VERSION and the shipped
-  # `config` one level above their own RESOLVED path, walking any symlink chain first, so the
-  # tree has to be installed whole and the bins have to be symlinks into it — copying the
-  # scripts into bin/ would put them one directory away from both files and break --version
-  # and every default in the suite.
+  # Seven executables that share no library: four public commands and three engine files.
+  # They locate VERSION and the shipped `config` one level above their own RESOLVED path,
+  # walking any symlink chain first, so the tree has to be installed whole and the bins have
+  # to be symlinks into it — copying the scripts into bin/ would put them one directory away
+  # from both files and break --version and every default in the suite.
   #
-  # Ten, and only ten. v0.9.0 also linked the pre-rename names (uting, ut-play, ut-playlist,
-  # ut-history); upstream deleted those in v0.10.0, so there is nothing left to link and a
-  # keg from here has one name per command. An installed 0.9.0 keg loses them on upgrade,
-  # which is the breaking half of that release and is upstream's call, not this file's.
+  # Only the four public commands go on PATH. The engines (t-engine-yt, t-engine-bili,
+  # t-engine-ne) are t-play's internal protocol, not a contract: t-play finds them beside its
+  # own resolved path, in libexec/shell, and every engine verb is reached as
+  # `t-play --search/--info/--items/--transcript/--auth`.
   def install
     libexec.install "shell", "config", "VERSION"
-    %w[
-      ting t-play t-playlist t-history
-      yt-search yt-resolve bili-search bili-resolve ne-search ne-resolve
-    ].each { |cmd| bin.install_symlink libexec/"shell/#{cmd}" }
+    %w[ting t-play t-playlist t-history].each { |cmd| bin.install_symlink libexec/"shell/#{cmd}" }
     doc.install "README.md", "docs"
   end
 
@@ -34,9 +31,11 @@ class Ting < Formula
       (--pause, --seek, --set-volume, --set-loop). macOS ships one; on Linux install
       netcat-openbsd or nmap's ncat.
 
-      The pre-rename command names (uting, ut-play, ut-playlist, ut-history) are gone as
-      of 0.10.0. Your own files are not: a config at ~/.config/uting/config and a store
-      at ~/.local/state/uting are still read where they are.
+      As of 0.18.0 the six yt-/bili-/ne-search/-resolve commands are gone: every engine verb
+      is `t-play --search/--info/--items/--transcript/--auth [--engine E]`. Every config key
+      is TING_-prefixed (TING_<KEY>, engine keys TING_<ENGINE>_<KEY>); a config file is read
+      only for TING_ keys, so rename any old keys in ~/.config/ting/config. The pre-rename locations
+      (~/.config/uting, ~/.local/state/uting) are no longer read.
     EOS
   end
 
@@ -50,5 +49,9 @@ class Ting < Formula
     # missing unix-socket netcat speaks before the tty gate does — so the claim is the
     # negative one, which holds under every gate: it never gets as far as not finding t-play.
     refute_match "cannot locate", shell_output("#{bin}/ting q </dev/null 2>&1 || true")
+    # t-play finds its engines in libexec, not on PATH: all three answer, each with flags.
+    engines = shell_output("#{bin}/t-play --engines -j")
+    %w[yt bili ne].each { |e| assert_match "\"name\":\"#{e}\"", engines }
+    refute_match "\"flags\":[]", engines
   end
 end
