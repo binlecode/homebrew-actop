@@ -5,15 +5,17 @@ class Ting < Formula
   sha256 "7d2b9a47c8434e7895340f3101b852b3c739bc9363b982439282b1f364debe2c"
   license "MIT"
 
+  depends_on "go" => :build
   depends_on "jq"
   depends_on "mpv"
   depends_on "yt-dlp"
 
-  # Seven executables that share no library: four public commands and three engine files.
-  # They locate VERSION and the shipped `config` one level above their own RESOLVED path,
-  # walking any symlink chain first, so the tree has to be installed whole and the bins have
-  # to be symlinks into it — copying the scripts into bin/ would put them one directory away
-  # from both files and break --version and every default in the suite.
+  # Six scripts and one Go binary, sharing no library: four public commands (ting, the TUI,
+  # is the binary) and three engine files. Every one locates VERSION and the shipped `config`
+  # one level above its own RESOLVED path, walking any symlink chain first, so the tree has to
+  # be installed whole and the bins have to be symlinks into it. The TUI is built into
+  # libexec/shell/ting, where the script it replaced lived, so that rule holds unchanged and
+  # it finds ting-play beside itself.
   #
   # Only the four public commands go on PATH. The engines (ting-engine-yt, ting-engine-bili,
   # ting-engine-ne) are ting-play's internal protocol, not a contract: ting-play finds them
@@ -21,6 +23,7 @@ class Ting < Formula
   # `ting-play --search/--info/--items/--transcript/--auth`.
   def install
     libexec.install "shell", "config", "VERSION"
+    system "go", "build", "-trimpath", "-o", libexec/"shell/ting", "./cmd/ting"
     %w[ting ting-play ting-playlist ting-history].each { |cmd| bin.install_symlink libexec/"shell/#{cmd}" }
     doc.install "README.md", "docs"
   end
